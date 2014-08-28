@@ -51,18 +51,25 @@ $date = Get-Date
 $Virtual = (Get-WmiObject win32_systemenclosure -Property Manufacturer)
 $CPU = (Get-WmiObject win32_processor -Property Manufacturer)
 ###Images at top
-$a = "<link rel='stylesheet' type='text/css' href='$resourcedir/WEB/theme.css'>"
-$a = $a + "<img src ='$resourcedir/WEB/$logo' alt='logo'>"
-if ($Virtual.Manufacturer -eq "No Enclosure"){
-    $a = $a + "<img src ='$resourcdir/WEB/VMWare.png' alt='vmware'>"
-}
-Elseif ($CPU.Manufacturer -eq "GenuineIntel")  {
-    $a = $a + "<img src='$Resourcedir/WEB/PhysicalIntel.png' alt='intel'>"
+if ($sendemail -ne $true){
+    $a = "<link rel='stylesheet' type='text/css' href='$resourcedir/WEB/theme.css'>"
+    
+
+    $a = $a + "<img src ='$resourcedir/WEB/$logo' alt='logo'>"
+    if ($Virtual.Manufacturer -eq "No Enclosure"){
+        $a = $a + "<img src ='$resourcdir/WEB/VMWare.png' alt='vmware'>"
+    }
+    Elseif ($CPU.Manufacturer -eq "GenuineIntel")  {
+        $a = $a + "<img src='$Resourcedir/WEB/PhysicalIntel.png' alt='intel'>"
+    }
+    Else {
+        $a = $a + "<img src='$resourcedir/WEB/PhysicalAMD.png' alt='AMD'>"
+    }
 }
 Else {
-    $a = $a + "<img src='$resourcedir/WEB/PhysicalAMD.png' alt='AMD'>"
-}
-
+    $css = Get-Content "$filepath\$resourcedir\WEB\theme.css"
+    $a = "<style>$css</style>"
+    } 
 #### Setting up header and description
 ConvertTo-Html -Head $a  -Title "Hardware Information for $name" >  "$filepath\$name.html"
 ConvertTo-Html -Body "<br><br><br><h1>$name</h1>" >> "$filepath\$name.html"
