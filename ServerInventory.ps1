@@ -18,7 +18,7 @@ $MasterScriptVersion Set this location so that script can auto update on all ser
 #$ErrorActionPreference = "SilentlyContinue" #Some non fatal errors may occur uncomment this line if you don't want to display them.
 ######Variables to fill
 $MasterScriptVersion = "\\Server\share\ServerInventory.ps1" 
-$logo = "logo.png"
+$logo = "Logo.png"
 $filepath = "\\someserver\someshare"
 $resourcedir =  "./Resources"
 $enableschedtask = $true
@@ -26,6 +26,7 @@ $Scheduledtaskuser = "domainname\username"
 $Scheduledtaskpass = "PlaintextPassword"
 $Scriptdir = "C:\ServerInventory\"
 $sendemail = $false
+
 
 
 #######
@@ -92,11 +93,24 @@ $osinfo = Get-WmiObject Win32_OperatingSystem -ComputerName $name  | Select Capt
 $osinfo.InstallDate = [management.managementDateTimeConverter]::ToDateTime($osinfo.InstallDate)
 $osinfo | ConvertTo-html  -Body "<H2> Operating System Information </H2>" >> "$filepath\$name.html"
 
+###Uptime and Last BootVolume
+$wmiPerfOsSystem = Get-WmiObject -computer $name -class Win32_PerfFormattedData_PerfOS_System
+$wmiOS = Get-WmiObject -computer $name -class Win32_OperatingSystem
+$lastBoot = $wmiOS.ConvertToDateTime($wmiOS.LastBootUpTime)
+New-TimeSpan -seconds $wmiPerfOsSystem.SystemUpTime -ErrorAction SilentlyContinue  |select days,hours,minutes,seconds | ConvertTo-html -body "<H2>Uptime</H2>" >> "$filepath\$name.html"
+$lastBoot | select DateTime |ConvertTo-html -body "<H2>Last Boot Time</H2>" >> "$filepath\$name.html"
+
+
 ###Windows Updates last installed###
 $Updates = Get-ItemProperty -Path "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\Results\Install" | select LastSuccessTime
 $Updates.LastSuccessTime = [DATETIME]::Parse($Updates.LastSuccessTime)
 $updatesout = New-Object -TypeName PSOBject
 $Updates | ConvertTo-Html -body "<H2>Windows Updates Last Installed</H2>" >> "$filepath\$name.html"
+
+###Event log
+Get-EventLog -LogName System -Newest 30 -EntryType Error,warning | select TimeGenerated,entrytype,source,message | ConvertTo-html -body "<H2>System Events</H2>" >> "$filepath\$name.html"
+Get-EventLog -LogName Application -Newest 30 -EntryType Error,warning | select TimeGenerated,entrytype,source,message | ConvertTo-html -body "<H2>Application Events</H2>" >> "$filepath\$name.html"
+
 
 ##Time Zone##
 Get-WmiObject win32_TimeZone -ComputerName $name | Select caption  | ConvertTo-html  -Body "<H2> Time Zone </H2>" >> "$filepath\$name.html"
