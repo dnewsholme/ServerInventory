@@ -244,7 +244,7 @@ if ($enableschedtask -eq $true){
         $password = $Scheduledtaskpass
         ###Create Scheduled Task to Run###
         Copy-Item "$MasterScriptVersion" "$Scriptdir" -Confirm:$false
-        $text = "C:\windows\system32\windowspowershell\v1.0\powershell.exe -ExecutionPolicy unrestricted -file $Scriptdir"
+        $text = "C:\windows\system32\windowspowershell\v1.0\powershell.exe -ExecutionPolicy unrestricted -file $Scriptdir\ServerInventory.ps1"
         $TaskName = 'Server Inventory'
         $TaskRun = $text 
         #create task now
