@@ -57,7 +57,7 @@ if ($sendemail -ne $true){
 
     $a = $a + "<img src ='$resourcedir/WEB/$logo' alt='logo'>"
     if ($Virtual.Manufacturer -eq "No Enclosure"){
-        $a = $a + "<img src ='$resourcdir/WEB/VMWare.png' alt='vmware'>"
+        $a = $a + "<img src ='$resourcedir/WEB/VMWare.png' alt='vmware'>"
     }
     Elseif ($CPU.Manufacturer -eq "GenuineIntel")  {
         $a = $a + "<img src='$Resourcedir/WEB/PhysicalIntel.png' alt='intel'>"
