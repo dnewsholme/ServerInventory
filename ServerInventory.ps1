@@ -108,12 +108,17 @@ Get-WmiObject win32_StartupCommand -ComputerName $name | select  caption,descrip
 $localusers = Get-WmiObject win32_UserAccount  -ComputerName $name -Filter "LocalAccount='$True'" | select Name,SID,PasswordExpires,Disabled,Lockout | ConvertTo-html  -Body "<H2> Local Users </H2>" >> "$filepath\$name.html"
 
 ###local user group membershipe
-$adsi = [ADSI]"WinNT://$env:COMPUTERNAME"
-$adsi.Children | where {$_.SchemaClassName -eq 'user'} | Foreach-Object {
+###Check if machine is a domain controller first to prevent large unreadable table
+Import-Module servermanager
+$Domaincontroller = get-windowsfeature  | where {$_.Name -eq "ADDS-Domain-Controller" -and $_.installed -eq $true}
+if ($Domaincontroller -eq $null){
+    $adsi = [ADSI]"WinNT://$env:COMPUTERNAME"
+    $adsi.Children | where {$_.SchemaClassName -eq 'user'} | Foreach-Object {
     $groups = $_.Groups() | Foreach-Object {$_.GetType().InvokeMember("Name", 'GetProperty', $null, $_, $null)}
     $_ | Select-Object @{n='UserName';e={$_.Name}},@{n='Groups';e={$groups -join ';'}}
-} | ConvertTo-html  -Body "<H2> Local User Group Memberships </H2>" >> "$filepath\$name.html"
-
+    } | ConvertTo-html  -Body "<H2> Local User Group Memberships </H2>" >> "$filepath\$name.html"
+}
+Else{}
 # MotherBoard: Win32_BaseBoard # You can Also select Tag,Weight,Width 
 Get-WmiObject -ComputerName $name  Win32_BaseBoard  |  Select Name,Manufacturer,Product,SerialNumber,Status  | ConvertTo-html  -Body "<H2> MotherBoard Information</H2>" >> "$filepath\$name.html"
 
@@ -260,5 +265,4 @@ $schtasks | ConvertTo-Html -Body "<H2>Scheduled Tasks</H2>" >> "$filepath\$name.
 
 ####Send Email if required
 If ($sendemail -eq $true){
-    Send-MailMessage -To $to -Subject $subject -From $from  $subject -SmtpServer $smtp -Priority "High" -BodyAsHtml -Attachments "$filepath\$name.html" 
-}
+    Send-MailMessage -To $to -Subject $subject -From $from  $subject -SmtpServer $smtp -Priority "High" -BodyAsHtml -Attachments "$filepath\$name.html"}
